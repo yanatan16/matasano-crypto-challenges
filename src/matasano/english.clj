@@ -7,7 +7,7 @@
 (def ciphertext-limit (float 0.7))
 
 (defn valid-english-chars?	[s]
-	(every? #(and (< 31 %) (> 127 %)) s))
+	(every? #(or (= 9 %) (= 10 %) (and (< 31 %) (> 127 %))) s))
 
 (def english-frequencies
 	{
@@ -83,7 +83,8 @@
 	})
 
 (defn- plaintext-letter-score [s]
-	(let [size (.size s)]
+	(let [ss (string/lower-case (string/replace (util/char-string s) #"[^a-zA-z]" ""))
+				size (count ss)]
 		(/
 			(apply +
 				(map
@@ -93,9 +94,7 @@
 								(/ val size)
 								(let [ev (english-frequencies key)]
 									(if ev ev 0)))))
-					(frequencies
-						(string/lower-case
-							(util/char-string s)))))
+					(frequencies ss)))
 			size)))
 
 (defn- plaintext-digraph-score [s]
@@ -114,27 +113,24 @@
 					(frequencies digraphs)))
 			size)))
 
-(defn plaintext-score [s]
-	(+
-		(plaintext-letter-score s)
-		(plaintext-digraph-score s)))
+(defn- ciphertext-letter-score [s]
+	(let [size (.size s)
+				ofreqs (reverse (sort (map #(/ % size) (vals (frequencies s)))))
+				cfreqs (reverse (sort (vals english-frequencies)))]
+		(/
+			(apply +
+				(map (comp math/abs -) ofreqs cfreqs))
+			size)))
+
+(defn score [s]
+	(plaintext-letter-score s))
 
 (defn ciphertext-score [s]
-	(let [size (.size s)
-				freq (sort (map #(/ % size) (vals (frequencies s))))
-				efreq (sort (vals english-frequencies))]
-		(apply +
-			(map
-				#(math/abs (- %1 %2))
-				freq
-				efreq))))
+	(ciphertext-letter-score s))
 
-(defn valid?
-	"Test a byte string for being english and not gibberish"
-	[s]
-	(and
-		(valid-english-chars? s)
-		(> plaintext-limit (plaintext-score s))))
-
-(defn ciphertext? [s]
-	(> ciphertext-limit (ciphertext-score s)))
+(defn solve-find-ciphered
+  [file & more]
+  (let [lines (map util/unhexify (util/get-lines file))
+        scores (sort-by first (map #(list (ciphertext-score %) %) lines))
+        best  (first scores)]
+    (util/hexify (second best))))

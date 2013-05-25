@@ -3,6 +3,9 @@
 	(:require [matasano.fixedxor :as fixedxor])
 	(:require [matasano.xorcipher :as xorcipher])
 	(:require [matasano.find-xor-cipher :as findxor])
+	(:require [matasano.rep-xor :as repxor])
+	(:require [matasano.aes :as aes])
+	(:require [matasano.english :as english])
 	(:gen-class :main true))
 
 (defn -main
@@ -10,10 +13,14 @@
 	[k & args]
 	(let
 		[problems {
-				:one base64/solve,
-				:two fixedxor/solve,
-				:three xorcipher/solve,
-				:four findxor/solve
+				1 base64/solve
+				2 fixedxor/solve
+				3 xorcipher/solve
+				4 findxor/solve
+				5 repxor/solve-encrypt
+				6 repxor/solve-decrypt
+				7 aes/solve-decrypt
+				8 english/solve-find-ciphered
 			}]
 		(println
-			(apply (problems (keyword k)) args))))
+			(apply (problems (Integer/parseInt k)) args))))

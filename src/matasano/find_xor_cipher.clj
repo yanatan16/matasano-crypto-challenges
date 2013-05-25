@@ -4,13 +4,14 @@
 	(:require [matasano.english :as english]))
 
 (defn find-message [lines]
-	(let [bests (filter #(not (nil? (first %))) (map #(list (xor/decipher (util/unhexify %)) %) lines))
-				scores (map #(list (english/plaintext-score (first %)) (util/char-string (first %)) (second %)) bests)]
+	(let [plains (map #(list (xor/decipher (util/unhexify %)) %) lines)
+				fplains (filter (comp (complement nil?) first) plains)
+				scores (map (fn [[a b]] [(english/score a) (util/char-string a) b]) fplains)]
 		(first (sort-by first scores))))
 
 (defn solve
 	"Find an xor-cipher from a file of encoded texts"
 	[file & more]
-	(rest
+	(second
 		(find-message
 			(util/get-lines file))))

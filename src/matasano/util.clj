@@ -36,7 +36,10 @@
 	"Convert a base64 char string to a byte string"
 	[strng]
 	(byte-string
-		(b64/decode strng)))
+		(b64/decode
+			(byte-array
+				(map ubyte
+					(byte-string strng))))))
 
 (defn base64ify
 	"Convert a byte string to a base64 char string"
@@ -51,4 +54,9 @@
 	[fname]
   (with-open [r (io/reader fname)]
     (doall (line-seq r))))
+
+(defn slice
+	"Take n values after m values"
+	[seq n m]
+	(take n (nthrest m seq)))
 

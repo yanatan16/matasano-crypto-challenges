@@ -6,7 +6,7 @@
 	(let [counts (map first (reverse (sort-by second (frequencies bcipher))))]
 		(set (flatten
 			(map
-				(fn [c] (map #(bit-xor (int %) c) [\a \e \i \o \u \A \E \I \O \U]))
+				(fn [c] (map #(bit-xor (int %) c) [\a \e \i \o \u \A \E \I \O \U (first " ")]))
 				counts)))))
 
 (defn all-keys []
@@ -20,7 +20,8 @@
 
 (defn find-key [bcipher]
 	(let [keylist (find-keys bcipher)
-				scores (sort-by first (map #(list (english/plaintext-score (decode % bcipher)) %) keylist))]
+				fkeylist (filter #(english/valid-english-chars? (decode % bcipher)) keylist)
+				scores (sort-by first (map #(list (english/score (decode % bcipher)) %) fkeylist))]
 		(second (first scores))))
 
 (defn decipher [bcipher]
