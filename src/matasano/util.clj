@@ -1,6 +1,7 @@
 (ns matasano.util
 	(:require [clojure.data.codec.base64 :as b64])
-	(:require [clojure.java.io :as io]))
+	(:require [clojure.java.io :as io])
+	(:import java.security.SecureRandom))
 
 (defn ubyte [val]
    (if (>= val 128)
@@ -11,6 +12,10 @@
 	"Convert char string to byte string"
 	[chars]
 	(map int chars))
+
+(defn true-byte-string [seq]
+	(byte-array
+		(map (comp ubyte int) seq)))
 
 (defn char-string
 	"Convert byte string to char string"
@@ -37,17 +42,14 @@
 	[strng]
 	(byte-string
 		(b64/decode
-			(byte-array
-				(map ubyte
-					(byte-string strng))))))
+			(true-byte-string strng))))
 
 (defn base64ify
 	"Convert a byte string to a base64 char string"
 	[bytes]
 	(char-string
 		(b64/encode
-			(byte-array
-				(map ubyte bytes)))))
+			(true-byte-string bytes))))
 
 (defn get-lines
 	"Open a file and get the lines"
@@ -57,6 +59,18 @@
 
 (defn slice
 	"Take n values after m values"
-	[seq n m]
-	(take n (nthrest m seq)))
+	[n m seq]
+	(take m (nthrest seq n)))
 
+(defn rand-bytes
+  "Returns a random byte array of the specified size."
+  [size]
+  (let [seed (byte-array size)]
+    (.nextBytes (SecureRandom/getInstance "SHA1PRNG") seed)
+    seed))
+
+(defn map= [& args] (every? identity (apply map = args)))
+
+(defn rotate [seq n]
+	(let [m (mod n (count seq))]
+		(concat (nthrest seq m) (take m seq))))

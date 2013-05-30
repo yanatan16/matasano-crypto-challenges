@@ -21,6 +21,7 @@
 				6 repxor/solve-decrypt
 				7 aes/solve-decrypt
 				8 english/solve-find-ciphered
+				10 aes/solve-cbc-decrypt
 			}]
 		(println
 			(apply (problems (Integer/parseInt k)) args))))
