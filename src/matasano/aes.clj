@@ -10,12 +10,16 @@
   [s]
   (SecretKeySpec. (util/true-byte-string s) "AES"))
 
+(defn pkcs7-pad [factor bytes]
+  (let [pad (mod (- (count bytes)) factor)]
+    (concat bytes (repeat pad pad))))
+
 (defn encrypt
   [key s]
   (let [cipher (doto (Cipher/getInstance "AES/ECB/NoPadding")
                  (.init Cipher/ENCRYPT_MODE (secret key)))]
     (util/true-byte-string
-      (.doFinal cipher (util/true-byte-string s)))))
+      (.doFinal cipher (util/true-byte-string (pkcs7-pad 16 s))))))
 
 (defn decrypt
   [key buf]
@@ -24,20 +28,6 @@
     (util/true-byte-string (.doFinal cipher buf))))
 
 (defn rand-key [] (util/rand-bytes 16))
-
-(defn count-offset-repeats
-  "Count the byte repeats at some offset"
-  [offset text]
-  (let [columns (apply map vector (partition offset text))]
-    (apply + (map #(- (count %) (count (distinct %))) columns))))
-
-(defn ecb-score [text]
-  (let [size (count text)]
-  (- 1.0 (/ (count-offset-repeats 16 text) size))))
-
-(defn pkcs7-pad [factor bytes]
-  (let [pad (mod (- (count bytes)) factor)]
-    (concat bytes (repeat pad pad))))
 
 (defn cbc-encrypt [iv key plain]
   (let [keysize (count key)]
@@ -59,33 +49,12 @@
         (list [] iv)
         (partition keysize cipher)))))
 
-(defn encrypt-oracle-cbc [input]
-  (let [plain (concat
-          (util/rand-bytes (+ 5 (rand-int 5)))
-          (util/byte-string input)
-          (util/rand-bytes (+ 5 (rand-int 5))))
-        encryptor (rand-nth (list encrypt (partial cbc-encrypt (rand-key))))]
-    (list (encryptor (rand-key) (pkcs7-pad 16 plain)) (not= encryptor encrypt))))
-
-(defn guess-cbc
-  "Use the encrypt-oracle-cbc to guess cbc vs ecb"
-  []
-  (let [input (util/byte-string (repeat 100 \A))
-        [cipher is-cbc] (encrypt-oracle-cbc input)
-        guess-cbc (> (ecb-score cipher) 0.8)]
-    (= guess-cbc is-cbc)))
-
 (defn solve-decrypt
 	[key file & more]
   (let [text (util/unbase64ify (apply str (util/get-lines file)))]
   	(util/char-string
   		(decrypt key
   			(byte-array (map byte text))))))
-
-(defn solve-find-ecb
-  [file & more]
-  (let [texts (map util/unhexify (util/get-lines file))]
-    (util/hexify (first (sort-by ecb-score texts)))))
 
 (defn solve-cbc-decrypt
   [key file & more]
