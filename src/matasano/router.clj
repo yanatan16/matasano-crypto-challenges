@@ -25,6 +25,7 @@
 				10 aes/solve-cbc-decrypt
 				11 attack-aes/guess-cbc
 				12 attack-aes/solve-break-oracle-ecb
+				14 attack-aes/solve-break-oracle-ecb-2
 			}]
 		(println
 			(apply (problems (Integer/parseInt k)) args))))

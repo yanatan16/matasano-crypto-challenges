@@ -3,6 +3,7 @@
 	(:require [matasano.aes :as aes])
 	(:require [matasano.attack-aes :as attack-aes])
 	(:require [matasano.test.problem-set-1 :as test-ps1])
+	(:require [matasano.cookie :as cookie])
   (:use [clojure.test]))
 
 (def yellow-submarine (util/byte-string "YELLOW SUBMARINE"))
@@ -21,7 +22,21 @@
 (deftest problem-eleven
 	(doall (repeatedly 4 #(is (attack-aes/guess-cbc)))))
 
-(deftest problem-eleven
+(deftest problem-twelve
 	(is (util/map=
 		"Rollin' in my 5.0\nWith my rag-top down so my hair can blow\nThe girlies on standby waving just to say hi\nDid you stop? No, I just drove by\n"
 		(attack-aes/solve-break-oracle-ecb encrypted-input))))
+
+(deftest problem-thirteen
+	(let [key (aes/rand-key)
+				email (cookie/craft-email "@jon.com")]
+		(is (= (cookie/url-decode (cookie/profile-for email "admin"))
+			(cookie/decrypt-profile key
+				(cookie/hack-admin-profile
+					(cookie/create-oracle-profile key)
+					email))))))
+
+(deftest problem-fourteen
+	(is (util/map=
+		"Rollin' in my 5.0\nWith my rag-top down so my hair can blow\nThe girlies on standby waving just to say hi\nDid you stop? No, I just drove by\n"
+		(attack-aes/solve-break-oracle-ecb-2 encrypted-input))))

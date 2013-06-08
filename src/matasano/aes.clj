@@ -14,6 +14,13 @@
   (let [pad (mod (- (count bytes)) factor)]
     (concat bytes (repeat pad pad))))
 
+(defn pkcs7-unpad [bytes]
+  (let [b (last bytes)
+        pad (take b (reverse bytes))]
+    (if (every? (partial = b) pad)
+      (reverse (drop-while (partial = b) (reverse bytes)))
+      bytes)))
+
 (defn encrypt
   [key s]
   (let [cipher (doto (Cipher/getInstance "AES/ECB/NoPadding")

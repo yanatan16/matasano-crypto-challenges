@@ -19,9 +19,9 @@
 
 (defn char-string
 	"Convert byte string to char string"
-	[bytes]
+	[& byte-arrays]
 	(apply str
-		(map char bytes)))
+		(map #(apply str (map char %)) byte-arrays)))
 
 (defn unhexify
 	"Convert a hex char string to a byte string"
@@ -61,6 +61,9 @@
 	"Take n values after m values"
 	[n m seq]
 	(take m (nthrest seq n)))
+
+(defn last [n seq]
+	(nthrest seq (- (count seq) n)))
 
 (defn rand-bytes
   "Returns a random byte array of the specified size."
