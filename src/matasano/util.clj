@@ -8,6 +8,11 @@
      (byte (- val 256))
      (byte val)))
 
+(defn un-ubyte [val]
+	(if (< val 0)
+		(int (+ val 256))
+		(int val)))
+
 (defn byte-string
 	"Convert char string to byte string"
 	[chars]
@@ -61,9 +66,6 @@
 	"Take n values after m values"
 	[n m seq]
 	(take m (nthrest seq n)))
-
-(defn last [n seq]
-	(nthrest seq (- (count seq) n)))
 
 (defn rand-bytes
   "Returns a random byte array of the specified size."

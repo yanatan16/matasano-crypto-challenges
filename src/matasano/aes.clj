@@ -19,7 +19,7 @@
         pad (take b (reverse bytes))]
     (if (every? (partial = b) pad)
       (reverse (drop-while (partial = b) (reverse bytes)))
-      bytes)))
+      (throw (Throwable. "Bytestring is not pkcs7-padded!")))))
 
 (defn encrypt
   [key s]
@@ -44,7 +44,7 @@
           (let [next-cipher (util/byte-string (encrypt key (xor/xor avec next-plain)))]
             (list (concat cipher next-cipher) next-cipher)))
         (list [] iv)
-        (partition keysize (pkcs7-pad keysize plain))))))
+        (partition keysize (pkcs7-pad keysize (util/byte-string plain)))))))
 
 (defn cbc-decrypt [iv key cipher]
   (let [keysize (count key)]

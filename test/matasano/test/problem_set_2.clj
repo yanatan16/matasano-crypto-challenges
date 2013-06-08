@@ -2,6 +2,7 @@
 	(:require [matasano.util :as util])
 	(:require [matasano.aes :as aes])
 	(:require [matasano.attack-aes :as attack-aes])
+	(:require [matasano.attack-aes-cbc :as attack-aes-cbc])
 	(:require [matasano.test.problem-set-1 :as test-ps1])
 	(:require [matasano.cookie :as cookie])
   (:use [clojure.test]))
@@ -40,3 +41,18 @@
 	(is (util/map=
 		"Rollin' in my 5.0\nWith my rag-top down so my hair can blow\nThe girlies on standby waving just to say hi\nDid you stop? No, I just drove by\n"
 		(attack-aes/solve-break-oracle-ecb-2 encrypted-input))))
+
+(deftest problem-fifteen
+	(is (= '(1 2 3 4 5 6) (aes/pkcs7-unpad '(1 2 3 4 5 6 2 2))))
+	(is (= '(1 2 3 4 5) (aes/pkcs7-unpad (aes/pkcs7-pad 16 '(1 2 3 4 5)))))
+	(is (thrown? Throwable (aes/pkcs7-unpad '(1 2 3 4 5 6 7 8)))))
+
+(deftest problem-sixteen
+	(let [key16 (aes/rand-key)
+				iv16 (aes/rand-key)
+				encoder (attack-aes-cbc/make-userdata-encoder iv16 key16
+					"comment1=cooking%20MCs;userdata="
+					";comment2=%20like%20a%20pound%20of%20bacon")
+				checker (attack-aes-cbc/make-userdata-checker iv16 key16 "admin=true")]
+		(is (not (checker (encoder "admin=true;admin=true;admin=true"))))
+		(is (checker (attack-aes-cbc/hack-cbc-add-string encoder ";admin=true")))))

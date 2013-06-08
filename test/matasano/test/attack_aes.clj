@@ -8,15 +8,20 @@
 (def ex-key (aes/rand-key))
 (def ex-oracle1 (attack-aes/create-oracle-ecb ex-key "Jon Stewart is on comedy central."))
 (def ex-oracle (attack-aes/create-oracle-ecb-2 ex-key (util/rand-bytes 5) "Jon Stewart is on comedy central."))
+(def ex-oracle-cbc (attack-aes/create-oracle-cbc-2 ex-key ex-key (util/rand-bytes 5) "Jon Stewart is on comedy central."))
 
 (deftest guess-block-size
-	(is (= 16 (attack-aes/guess-block-size ex-oracle))))
+	(is (= 16 (attack-aes/guess-block-size ex-oracle)))
+	(is (= 16 (attack-aes/guess-block-size ex-oracle-cbc))))
 
 (deftest guess-prepend-size
 	(doall (map
 		(fn [n]
 			(is (= n (attack-aes/guess-prepend-size
 				(attack-aes/create-oracle-ecb-2 ex-key (util/rand-bytes n) "Jon Stewart is on comedy central.")
+				16)))
+			(is (= n (attack-aes/guess-prepend-size
+				(attack-aes/create-oracle-cbc-2 ex-key ex-key (util/rand-bytes n) "Jon Stewart is on comedy central.")
 				16))))
 		(range 0 32 4))))
 

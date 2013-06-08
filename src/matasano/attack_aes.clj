@@ -1,12 +1,7 @@
 (ns matasano.attack-aes
   (:use matasano.aes)
 	(:require [matasano.util :as util])
-  (:require [matasano.english :as english])
-  (:require [matasano.fixedxor :as xor])
-  (:require [clojure.contrib.math :as math])
-	(:import (javax.crypto Cipher))
-  (:import (javax.crypto.spec SecretKeySpec))
-  (:import (java.security Key)))
+  (:require [clojure.contrib.math :as math]))
 
 (defn count-offset-repeats
   "Count the byte repeats at some offset"
@@ -44,6 +39,9 @@
 
 (defn create-oracle-ecb-2 [key random-prepend random-input]
   (comp (partial encrypt key) #(concat random-prepend % random-input)))
+
+(defn create-oracle-cbc-2 [iv key random-prepend random-input]
+  (comp (partial cbc-encrypt iv key) #(concat random-prepend % random-input)))
 
 (defn wrap-oracle-prepend [oracle prepend-size block-size]
   (let [pad (- block-size (mod prepend-size block-size))
