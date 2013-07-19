@@ -10,9 +10,11 @@
   [s]
   (SecretKeySpec. (util/true-byte-string s) "AES"))
 
-(defn pkcs7-pad [factor bytes]
-  (let [pad (mod (- (count bytes)) factor)]
-    (concat bytes (repeat pad pad))))
+(defn pkcs7-pad
+  ([factor bytes]
+    (let [pad (+ (mod (- 0 (count bytes) 1) factor) 1)]
+      (concat bytes (repeat pad pad))))
+  ([bytes] (pkcs7-pad 16 bytes)))
 
 (defn pkcs7-unpad [bytes]
   (let [b (last bytes)
@@ -21,12 +23,14 @@
       (reverse (drop-while (partial = b) (reverse bytes)))
       (throw (Throwable. "Bytestring is not pkcs7-padded!")))))
 
-(defn encrypt
+(defn- raw-encrypt
   [key s]
   (let [cipher (doto (Cipher/getInstance "AES/ECB/NoPadding")
                  (.init Cipher/ENCRYPT_MODE (secret key)))]
     (util/true-byte-string
-      (.doFinal cipher (util/true-byte-string (pkcs7-pad 16 s))))))
+      (.doFinal cipher (util/true-byte-string s)))))
+
+(defn encrypt [key s] (raw-encrypt key (pkcs7-pad 16 s)))
 
 (defn decrypt
   [key buf]
@@ -41,10 +45,10 @@
     (first
       (reduce
         (fn [[cipher avec] next-plain]
-          (let [next-cipher (util/byte-string (encrypt key (xor/xor avec next-plain)))]
+          (let [next-cipher (util/byte-string (raw-encrypt key (xor/xor avec next-plain)))]
             (list (concat cipher next-cipher) next-cipher)))
         (list [] iv)
-        (partition keysize (pkcs7-pad keysize (util/byte-string plain)))))))
+        (partition keysize (util/byte-string plain))))))
 
 (defn cbc-decrypt [iv key cipher]
   (let [keysize (count key)]

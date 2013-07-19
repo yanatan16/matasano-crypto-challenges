@@ -53,7 +53,7 @@
   (let [base-length (count (oracle []))
         lengths (map #(list (count (oracle (repeat % \A))) %) (range (+ block-size 1)))
         [next-length pad] (first (filter #(not= (first %) base-length) lengths))]
-    (+ (- base-length pad) 1)))
+    (- base-length pad)))
 
 (defn guess-prepend-size [oracle block-size]
   (let [inputs (map #(repeat % \A) (range (+ 1 block-size)))

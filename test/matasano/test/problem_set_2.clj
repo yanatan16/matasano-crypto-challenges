@@ -11,7 +11,7 @@
 (def encrypted-input "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK")
 
 (deftest problem-nine
-	(is (= yellow-submarine (aes/pkcs7-pad 16 yellow-submarine)))
+	(is (= (concat yellow-submarine (repeat 16 16)) (aes/pkcs7-pad 16 yellow-submarine)))
 	(is (= (concat yellow-submarine [4 4 4 4]) (aes/pkcs7-pad 20 yellow-submarine)))
 	(is (= [1 2 3 4 5 6 7 8 9 0 6 6 6 6 6 6] (aes/pkcs7-pad 8 [1 2 3 4 5 6 7 8 9 0]))))
 

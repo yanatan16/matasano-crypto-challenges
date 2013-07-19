@@ -22,6 +22,14 @@
         #(= check-for %)
         (string/split decoded #";")))))
 
+(defn make-padding-checker [iv key]
+  (fn [cipher-text]
+    (try
+      (do
+        (pkcs7-unpad (cbc-decrypt iv key cipher-text))
+        true)
+      (catch Throwable e false))))
+
 (defn hack-create-sanitize-bit-errors
   "This creates a bit-flip on the lowest bits of the special characters"
   [s]
@@ -42,3 +50,17 @@
         hack-add (hack-create-sanitize-bit-errors to-add)
         encoded (encoder (concat (repeat pad \A) hack-add))]
     (hack-bit-flip-ciphertext encoded (- offset block-size) offset to-add)))
+
+(defn hack-cbc-find-pad [iv pad-check cipher-text]
+  (let [blocks (partition 16 cipher-text)
+        second-to-last (last (butlast (concat [iv] blocks)))
+        masks (map (fn [n] (map #(if (= n %) 1 0) (range 16))) (range 16))
+        modified-2tls (map #(xor/xor second-to-last %) masks)
+        modified-blocks (map #(concat blocks [% (last blocks)]) modified-2tls)
+        pad-invalid (map #(if (pad-check (apply concat %)) 0 1) modified-blocks)]
+    (reduce + pad-invalid)))
+
+(defn hack-cbc-lookup-by-pad [possibles iv pad-check cipher-text]
+  (let [pads (map pkcs7-pad possibles)
+        lookup (zipmap (map #(list (count %) (last %)) pads) possibles)]
+    (lookup (list (count cipher-text) (hack-cbc-find-pad iv pad-check cipher-text)))))
