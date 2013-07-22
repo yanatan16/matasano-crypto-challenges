@@ -29,7 +29,7 @@
 				norms (map (fn [[d n]] [(/ d n) n]) distances)]
 		(take 2 (map second (sort-by first norms)))))
 
-(defn- decipher-and-score [text len]
+(defn decipher-and-score [text len]
 	(let [partitions (apply map vector (partition len text))
 				key (map #(xor/find-key %) partitions)
 				plaintext (if (every? (complement nil?) key) (decode key text) nil)]

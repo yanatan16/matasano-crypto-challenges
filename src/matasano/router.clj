@@ -7,6 +7,7 @@
 	(:require [matasano.aes :as aes])
 	(:require [matasano.english :as english])
 	(:require [matasano.attack-aes :as attack-aes])
+	(:require [matasano.aes-ctr :as aes-ctr])
 	(:gen-class :main true))
 
 (defn -main
@@ -26,6 +27,9 @@
 				11 attack-aes/guess-cbc
 				12 attack-aes/solve-break-oracle-ecb
 				14 attack-aes/solve-break-oracle-ecb-2
+				18 aes-ctr/solve-crypt
+				19 aes-ctr/solve-crypt-multi
+				20 aes-ctr/solve-crypt-multi
 			}]
 		(println
 			(apply (problems (Integer/parseInt k)) args))))
