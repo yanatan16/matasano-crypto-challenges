@@ -4,7 +4,8 @@
 	(:require [matasano.util :as util])
   (:require [matasano.aes :as aes])
   (:require [matasano.fixedxor :as xor])
-  (:require [matasano.rep-xor :as rep-xor]))
+  (:require [matasano.rep-xor :as rep-xor])
+  (:require [matasano.stream :as strm]))
 
 (defn make-instance [key nonce]
 	{:key key, :nonce nonce, :count 0})
@@ -17,17 +18,15 @@
 				(aes/raw-encrypt (instance :key)))
 			(assoc instance :count (inc (instance :count)))])
 
-(defn stream [instance]
-	(let [[b i] (get-block instance)]
-		(concat b (lazy-seq (stream i)))))
+(def stream (strm/stream get-block))
+(def encrypt-all (strm/encrypt get-block))
 
-(defn encrypt-all [instance plain]
-	(xor/xor (stream instance) plain))
+(def decrypt-all encrypt-all)
+
 
 (defn encrypt [key nonce plain]
 	(encrypt-all (make-instance key nonce) plain))
 
-(def decrypt-all encrypt-all)
 (def decrypt encrypt)
 
 (defn solve-crypt [key nonce text]
