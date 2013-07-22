@@ -16,3 +16,9 @@
 (deftest test-char-string
 	(is (= "hey there" (util/char-string (util/byte-string "hey there"))))
 	(is (= "yoyo" (util/char-string [121 111] [121 111]))))
+
+(deftest int-byte
+	(is (util/map= [0 0 0 0 0 0 0 0] (util/int-bigend 0)))
+	(is (util/map= [0 0 0 1 0x23 0x45 0x67 0x89] (util/int-bigend 4886718345)))
+	(is (util/map= [0 0 0 0 0 0 0 0] (util/int-lilend 0)))
+	(is (util/map= [0x89 0x67 0x45 0x23 1 0 0 0  ] (util/int-lilend 4886718345))))

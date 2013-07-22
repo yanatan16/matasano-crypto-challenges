@@ -79,3 +79,14 @@
 (defn rotate [seq n]
 	(let [m (mod n (count seq))]
 		(concat (nthrest seq m) (take m seq))))
+
+(defn- int-shift-byte [x n]
+	(mod
+		(bit-shift-right x n)
+		256))
+
+(defn int-bigend [x]
+	(map (partial int-shift-byte x) (range 56 -1 -8)))
+
+(defn int-lilend [x]
+	(map (partial int-shift-byte x) (range 0 64 8)))

@@ -23,7 +23,7 @@
       (reverse (drop-while (partial = b) (reverse bytes)))
       (throw (Throwable. "Bytestring is not pkcs7-padded!")))))
 
-(defn- raw-encrypt
+(defn raw-encrypt
   [key s]
   (let [cipher (doto (Cipher/getInstance "AES/ECB/NoPadding")
                  (.init Cipher/ENCRYPT_MODE (secret key)))]
