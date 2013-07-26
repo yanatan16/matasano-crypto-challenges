@@ -18,8 +18,8 @@
 				(aes/raw-encrypt (instance :key)))
 			(assoc instance :count (inc (instance :count)))])
 
-(def stream (strm/stream get-block))
-(def encrypt-all (strm/encrypt get-block))
+(def stream (strm/block-stream get-block))
+(def encrypt-all (strm/encrypt stream))
 
 (def decrypt-all encrypt-all)
 

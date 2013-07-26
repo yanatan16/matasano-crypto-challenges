@@ -3,11 +3,17 @@
 	(:require [matasano.util :as util])
   (:require [matasano.fixedxor :as xor]))
 
-(defn stream [get-block]
+(defn block-stream [get-block]
 	(fn stream-inside [instance]
 		(let [[b i] (get-block instance)]
 			(concat b (lazy-seq (stream-inside i))))))
 
-(defn encrypt [get-block]
+(defn value-stream [get-value]
+	(fn stream-inside [instance]
+		(let [[v i] (get-value instance)]
+			(cons v (lazy-seq (stream-inside i))))))
+
+(defn encrypt [streamer]
 	(fn [instance plain]
-		(xor/xor plain ((stream get-block) instance))))
+		(xor/xor plain (streamer instance))))
+
