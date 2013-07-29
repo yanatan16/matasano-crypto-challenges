@@ -63,7 +63,7 @@
     (doall (line-seq r))))
 
 (defn slice
-	"Take n values after m values"
+	"Take m values after n values"
 	[n m seq]
 	(take m (nthrest seq n)))
 

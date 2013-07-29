@@ -83,7 +83,16 @@
 
 ; Problem 22
 ; Get seed for mersenne twister
-(deftest problem-twenty-one
+(deftest problem-twenty-two
 	(let [rseed (- (util/unix) (rand-int 1000))
 				fval (first (mt/stream rseed))]
 		(is (= rseed (mt/find-recent-seed fval)))))
+
+; Problem 23
+; Clone a mersenne stream
+(deftest problem-twenty-three
+	(let [stream (mt/stream (rand-int Integer/MAX_VALUE))]
+		(is (util/map=
+			(take 1000 stream)
+			(mt/clone-stream stream)))))
+
