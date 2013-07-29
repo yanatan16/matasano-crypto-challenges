@@ -81,9 +81,7 @@
 		(concat (nthrest seq m) (take m seq))))
 
 (defn- int-shift-byte [x n]
-	(mod
-		(bit-shift-right x n)
-		256))
+	(bit-and 0xff (bit-shift-right x n)))
 
 (defn int-bigend [x]
 	(map (partial int-shift-byte x) (range 56 -1 -8)))

@@ -28,3 +28,32 @@
 	(let [strm (mt/stream 123456789)
 				cln (mt/clone-stream strm)]
 		(is (util/map= (take 1000 strm) cln))))
+
+(deftest reverse-state
+	(let [instance (mt/make-instance 123)
+				[fv ninst] (mt/next-value instance)
+				orig-state (mt/reverse-state 624 (ninst :mt))]
+		(is (util/map= (rest (instance :mt)) (rest orig-state)))))
+
+(deftest reverse-state-part
+	(let [inst (mt/make-instance 789)
+				[_ ninst] (mt/next-value inst)
+				strm (nthrest (mt/instance-stream inst) 25)
+				utemp (apply vector (map mt/untemper (take 624 strm)))
+				clnmt (concat (nthrest utemp 599) (take 599 utemp))
+				orig-state (mt/reverse-state 25 clnmt)]
+		(is (util/map= (rest (ninst :mt)) (rest orig-state)))))
+
+(deftest clone-later
+	(let [strm (nthrest (mt/stream 123456789) 25)
+				cln (mt/clone-stream strm 25)]
+		(is (util/map= (take 700 strm) cln))))
+
+(deftest hack-seed
+	(let [inst (mt/make-instance 0xabcdef)]
+		(is (= 0xabcdef (mt/hack-seed (second (inst :mt)))))))
+
+(deftest cipher
+	(let [key (rand-int 0xffff)
+				plain (util/byte-string "abcdefghijklmnopqrstuvwxyz")]
+		(is (util/map= plain (mt/decrypt key (mt/encrypt key plain))))))

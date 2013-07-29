@@ -2,44 +2,27 @@
 	(:require [matasano.util :as util])
 	(:require [matasano.stream :as stream]))
 
-(defn lower-32-multiply [s m]
-	(+
-		(->
-			s
-			(bit-and 0xffff0000)
-			(bit-shift-right 16)
-			(* m)
-			(bit-shift-left 16))
-		(->
-			s
-			(bit-and 0x0000ffff)
-			(* m))))
+(defn- init-state-helper [n i]
+	(->
+		n
+		(bit-shift-right 30)
+		(bit-xor n)
+		(* 1812433253)
+		(+ i)
+		(bit-and 0xffffffff)))
 
 (defn- init-state [seed]
-	(reduce
-		(fn [l i]
-			(conj l
-				(->
-					(last l)
-					(bit-shift-right 30)
-					(bit-xor (last l))
-					(lower-32-multiply 1812433253)
-					(+ i)
-					(bit-and 0xffffffff))))
-		[seed]
-		(range 1 624)))
+	(apply vector
+		(reduce
+			(fn [l i]
+				(conj l (init-state-helper (last l) i)))
+			[seed]
+			(range 1 624))))
 
 (defn make-instance [seed]
 	{
 		:index 624
 		:mt (init-state seed)
-	})
-
-(defn make-instance-from-state [mt]
-	; (println "make-inst" (take 5 mt))
-	{
-		:index 0
-		:mt mt
 	})
 
 (defn temper [y]
@@ -51,17 +34,18 @@
 		]))
 
 (defn- generate-numbers [mt]
-	; (println "gen-nums" (take 5 mt))
-	(map
-		(fn [i]
+	(reduce
+		(fn [state i]
 			(let [y (+
-								(bit-and (nth mt i) 0x80000000)
-								(bit-and (nth mt (mod (inc i) 624)) 0x7fffffff))
-						xval (if (odd? y) 2567483615 0)]
-				(bit-xor
-					(nth mt (mod (+ i 397) 624))
-					(bit-shift-right y 1)
-					xval)))
+								(bit-and (state i) 0x80000000)
+								(bit-and (state (mod (inc i) 624)) 0x7fffffff))
+						xval (if (odd? y) 2567483615 0)
+						result (bit-xor
+							(state (mod (+ i 397) 624))
+							(bit-shift-right y 1)
+							xval)]
+				(assoc state i result)))
+		(apply vector mt)
 		(range 624)))
 
 (defn next-value [instance]
@@ -80,6 +64,11 @@
 		seed
 		make-instance
 		instance-stream))
+
+(def crypt-instance (stream/encrypt (stream/long-stream next-value)))
+(defn encrypt [key plain]
+	(crypt-instance (make-instance key) plain))
+(def decrypt encrypt)
 
 ; ** Hacking section **
 
@@ -110,18 +99,57 @@
 			#(undo-bit-shift-right % 11)
 		]))
 
-(defn clone-instance [strm]
-	(->>
-		strm
-		(map untemper)
-		(take 624)
-		make-instance-from-state))
-
-(defn clone-stream [strm]
+(defn- first-bit? [n]
 	(->
-		strm
-		clone-instance
-		instance-stream))
+		n
+		(bit-and 0x80000000)
+		zero?
+		not))
+
+(defn reverse-state [index mt]
+	(apply vector
+		(reduce
+			(fn [state i]
+				(let [y (bit-xor (state i) (state (mod (+ i 397) 624)))
+							y2 (if (first-bit? y) (bit-xor y 0x9908b0df) y)
+							z (bit-xor (state (mod (+ i 623) 624)) (state (mod (+ i 396) 624)))
+							z2 (if (first-bit? z) (bit-xor z 0x9908b0df) z)
+							result (+
+								(-> y2 (bit-shift-left 1) (bit-and 0x80000000))
+								(-> z2 (bit-shift-left 1) (bit-and 0x7fffffff))
+								(if (first-bit? z) 1 0))]
+					(assoc state i result)))
+			(apply vector mt)
+			(reverse (range index)))))
+
+(defn hack-seed [sec]
+	(let [tmp (- sec 1)
+				tmp2 (bit-and (* tmp -1774682003) 0xffffffff)]
+		(bit-xor tmp2 (bit-shift-right tmp2 30))))
+
+(defn make-instance-from-state [index mt]
+	; (println "make-inst" (take 5 mt))
+	{
+		:index index
+		:mt (reverse-state index (concat (nthrest mt (- 624 index)) (take (- 624 index) mt)))
+	})
+
+(defn clone-instance
+	([strm] (clone-instance strm 0))
+	([strm index]
+		(->>
+			strm
+			(map untemper)
+			(take 624)
+			(make-instance-from-state index))))
+
+(defn clone-stream
+	([strm] (clone-stream strm 0))
+	([strm index]
+		(->
+			strm
+			(clone-instance index)
+			instance-stream)))
 
 (defn find-recent-seed
 	"Find the seed of a recently (1000 s) seeded Mersenne Twister instance using its first value"
