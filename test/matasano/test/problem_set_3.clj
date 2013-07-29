@@ -96,3 +96,10 @@
 			(take 1000 stream)
 			(mt/clone-stream stream)))))
 
+; Problem 24
+; Fully hack a mersenne twister cipher
+(deftest problem-twenty-four
+	(let [key (rand-int 0xffff)
+				prefix (repeatedly (rand-int 100) #(+ 96 (rand-int 32)))
+				oracle (mt/make-oracle key prefix)]
+		(is (= key (mt/hack-oracle oracle)))))

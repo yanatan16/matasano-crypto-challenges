@@ -70,6 +70,10 @@
 	(crypt-instance (make-instance key) plain))
 (def decrypt encrypt)
 
+(defn make-oracle [key prefix]
+	(fn [plain]
+		(encrypt key (concat prefix plain))))
+
 ; ** Hacking section **
 
 (defn- undo-bit-shift-mask [x n mask shifter indices]
@@ -158,3 +162,10 @@
 				trange (range (- now 1000) (+ now 1))
 				rmap (zipmap (map #(-> % stream first) trange) trange)]
 		(rmap fv)))
+
+(defn hack-oracle [oracle]
+	(let [output (oracle (repeat 2499 100))
+				prefix-len (- (quot (count output) 4) 624)
+				known (map #(bit-xor 100 %) (util/slice (* prefix-len 4) 2496 output))
+				clone (clone-instance (util/long-string known) prefix-len)]
+		(hack-seed (second (reverse-state 624 (clone :mt))))))

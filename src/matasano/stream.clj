@@ -16,7 +16,7 @@
 (defn long-stream [get-long]
 	(fn stream-inside [instance]
 		(let [[v i] (get-long instance)]
-			(concat (util/int-bigend v) (lazy-seq (stream-inside i))))))
+			(concat (util/int-bigend-32 v) (lazy-seq (stream-inside i))))))
 
 (defn encrypt [streamer]
 	(fn [instance plain]

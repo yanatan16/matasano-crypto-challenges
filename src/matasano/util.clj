@@ -28,6 +28,12 @@
 	(apply str
 		(map #(apply str (map char %)) byte-arrays)))
 
+(defn long-string [bytes]
+	(map
+		(fn [[a b c d]]
+			(+ (bit-shift-left a 24) (bit-shift-left b 16) (bit-shift-left c 8) d))
+		(partition 4 bytes)))
+
 (defn unhexify
 	"Convert a hex char string to a byte string"
 	[hex]
@@ -83,10 +89,13 @@
 (defn- int-shift-byte [x n]
 	(bit-and 0xff (bit-shift-right x n)))
 
-(defn int-bigend [x]
+(defn int-bigend-64 [x]
 	(map (partial int-shift-byte x) (range 56 -1 -8)))
 
-(defn int-lilend [x]
+(defn int-bigend-32 [x]
+	(map (partial int-shift-byte x) (range 24 -1 -8)))
+
+(defn int-lilend-64 [x]
 	(map (partial int-shift-byte x) (range 0 64 8)))
 
 (defn unix [] (quot (System/currentTimeMillis) 1000))

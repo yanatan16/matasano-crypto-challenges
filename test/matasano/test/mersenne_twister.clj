@@ -57,3 +57,7 @@
 	(let [key (rand-int 0xffff)
 				plain (util/byte-string "abcdefghijklmnopqrstuvwxyz")]
 		(is (util/map= plain (mt/decrypt key (mt/encrypt key plain))))))
+
+(deftest hack-oracle
+	(let [oracle (mt/make-oracle 123 [129 101 84 55 27])]
+		(is (= 123 (mt/hack-oracle oracle)))))

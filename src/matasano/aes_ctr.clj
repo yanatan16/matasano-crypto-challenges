@@ -14,7 +14,7 @@
 		[
 			(->>
 				(map instance [:nonce :count])
-				(mapcat util/int-lilend)
+				(mapcat util/int-lilend-64)
 				(aes/raw-encrypt (instance :key)))
 			(assoc instance :count (inc (instance :count)))])
 
