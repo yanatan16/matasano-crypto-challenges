@@ -90,3 +90,5 @@
 
 (defn int-lilend [x]
 	(map (partial int-shift-byte x) (range 0 64 8)))
+
+(defn unix [] (quot (System/currentTimeMillis) 1000))

@@ -3,6 +3,7 @@
 	(:require [matasano.aes :as aes])
 	(:require [matasano.attack-aes-cbc :as attack-aes-cbc])
 	(:require [matasano.aes-ctr :as aes-ctr])
+	(:require [matasano.mersenne-twister :as mt])
   (:use [clojure.test]))
 
 (def plain-text-17
@@ -79,3 +80,10 @@
 ; Cleartext: Rakim's Rated "R" and "Paid in Full" full lyrics
 (deftest problem-twenty
 	(is (util/map= (util/get-lines "prob20-output.txt") (aes-ctr/solve-crypt-multi "prob20-input.txt"))))
+
+; Problem 22
+; Get seed for mersenne twister
+(deftest problem-twenty-one
+	(let [rseed (- (util/unix) (rand-int 1000))
+				fval (first (mt/stream rseed))]
+		(is (= rseed (mt/find-recent-seed fval)))))
