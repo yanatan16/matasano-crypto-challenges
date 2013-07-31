@@ -73,6 +73,13 @@
 	[n m seq]
 	(take m (nthrest seq n)))
 
+(defn splice
+	"Replace m values of seq with newseq into seq at position n. (m=(count seq) by default)"
+	([n seq newseq]
+		(splice n (count newseq) seq newseq))
+	([n m seq newseq]
+		(concat (take n seq) newseq (nthrest seq (+ n m)))))
+
 (defn rand-bytes
   "Returns a random byte array of the specified size."
   [size]

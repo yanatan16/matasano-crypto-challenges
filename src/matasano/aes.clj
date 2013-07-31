@@ -61,7 +61,7 @@
         (partition keysize cipher)))))
 
 (defn solve-decrypt
-	[key file & more]
+	[key file]
   (let [text (util/unbase64ify (apply str (util/get-lines file)))]
   	(util/char-string
   		(decrypt key

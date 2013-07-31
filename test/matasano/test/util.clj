@@ -25,3 +25,7 @@
 
 (deftest long-string
 	(is (util/map= [0xabcdef12 0x34567890] (util/long-string [0xab 0xcd 0xef 0x12 0x34 0x56 0x78 0x90]))))
+
+(deftest splice
+	(is (= "hellomyangelhello" (apply str (util/splice 5 "hello how i hello" "myangel"))))
+	(is (= "hellomyangel how i hello" (apply str (util/splice 5 0 "hello how i hello" "myangel")))))

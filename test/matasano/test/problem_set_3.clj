@@ -28,7 +28,7 @@
 		(= "Yo, VIP Let's kick it Ice, Ice, baby Ice, Ice, baby ")
 		is))
 
-; problem 18 by hand
+; problem 19 by hand
 ; keystream:
 ; (115 -75 -29 118 -98 -26 40 123 -63 -94 62 41 -50 -54 -39 114 -40 100 -73 62 53 91 120 57 7 -6 -29 48 34 -67 69 -75 -42 61 -118 -45 -97 8)
 

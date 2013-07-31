@@ -30,6 +30,7 @@
 				18 aes-ctr/solve-crypt
 				19 aes-ctr/solve-crypt-multi
 				20 aes-ctr/solve-crypt-multi
+				25 aes-ctr/solve-exploit-edit
 			}]
 		(println
 			(apply (problems (Integer/parseInt k)) args))))

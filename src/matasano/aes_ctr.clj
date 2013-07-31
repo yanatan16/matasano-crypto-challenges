@@ -1,5 +1,6 @@
 (ns matasano.aes-ctr
 	(:use clojure.contrib.core)
+	(:use [clojure.string :only (join)])
 	(:require [clojure.string :as str])
 	(:require [matasano.util :as util])
   (:require [matasano.aes :as aes])
@@ -24,10 +25,35 @@
 (def decrypt-all encrypt-all)
 
 
-(defn encrypt [key nonce plain]
-	(encrypt-all (make-instance key nonce) plain))
+(defn encrypt
+	([key plain]
+		(encrypt key 0 plain))
+	([key nonce plain]
+		(encrypt-all (make-instance key nonce) plain)))
 
 (def decrypt encrypt)
+
+(defn edit [cipher key offset newplain]
+	(->>
+		cipher
+		(decrypt key)
+		(#(util/splice offset % newplain))
+		(encrypt key)))
+(defn editor [key]
+	#(edit %1 key %2 %3))
+
+; -- Hacking --
+
+(defn exploit-edit
+	"Crack a ciphertext given an editor by exploiting the invertibility of xor"
+	[cipher editor]
+	(->
+		cipher
+		(editor 0 (repeat (count cipher) (int \A)))
+		(xor/xor cipher)
+		(xor/xor (repeat (int \A)))))
+
+; -- Solvers (problems) --
 
 (defn solve-crypt [key nonce text]
 	(util/char-string
@@ -49,3 +75,11 @@
 			util/char-string
 			(partition len)
 			(map #(apply str %)))))
+
+(defn solve-exploit-edit [file]
+	(let [key (aes/rand-key)
+				plain (->> file util/get-lines (join "\n") util/byte-string)
+				cipher (encrypt key plain)
+				editr (editor key)
+				hacked (exploit-edit cipher editr)]
+		(util/char-string hacked)))
