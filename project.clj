@@ -4,4 +4,5 @@
   							 [org.clojure/data.codec "0.1.0"]
   							 [org.clojure/clojure-contrib "1.2.0"]
   							 [bouncycastle/bouncycastle-jce-jdk13 "112"]]
+	:java-source-paths ["java"]
   :main matasano.router)
