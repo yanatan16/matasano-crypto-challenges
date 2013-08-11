@@ -1,8 +1,7 @@
 (ns matasano.cookie
 	(:require [clojure.string :as string])
 	(:require [matasano.util :as util])
-	(:require [matasano.aes :as aes])
-	(:require [matasano.attack-aes :as attack-aes]))
+	(:require [matasano.aes :as aes]))
 
 (defn url-decode [encoded]
 	(apply hash-map (string/split encoded #"[&=]")))
@@ -12,10 +11,10 @@
 		(map (fn [[k v]] (str k "=" v)) obj)))
 
 (defn sanitize [s]
-	(string/escape s {
-			\& ""
-			\= ""
-		}))
+	(->
+		s
+		util/char-string
+		(string/escape { \& "" \= "" })))
 
 (defn profile-for
 	([email] (profile-for email "user"))
@@ -24,6 +23,17 @@
 			"uid" 10
 			"role" (sanitize role)
 		))))
+
+(defn make-userdata-encoder [encryptor pre post]
+  (fn [user-data]
+    (encryptor (apply concat (map util/byte-string [pre (sanitize user-data) post])))))
+
+(defn make-userdata-checker [decryptor check-for]
+  (fn [encoded-user-data]
+    (let [decoded (util/char-string (decryptor encoded-user-data))]
+      (some
+        #(= check-for %)
+        (string/split decoded #";")))))
 
 (defn encrypt-profile [key & profile-args]
 	(aes/encrypt key (apply profile-for profile-args)))

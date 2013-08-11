@@ -1,6 +1,7 @@
 (ns matasano.attack-aes-cbc
   (:use matasano.aes)
   (:use matasano.attack-aes)
+  (:require [matasano.cookie :as cookie])
 	(:require [matasano.util :as util])
   (:require [matasano.fixedxor :as xor])
   (:require [clojure.string :as string]))
@@ -12,15 +13,15 @@
     }))
 
 (defn make-userdata-encoder [iv key pre post]
-  (fn [user-data]
-    (cbc-encrypt iv key (apply concat (map util/byte-string [pre (sanitize user-data) post])))))
+  (cookie/make-userdata-encoder
+    (partial cbc-encrypt iv key)
+    pre
+    post))
 
 (defn make-userdata-checker [iv key check-for]
-  (fn [encoded-user-data]
-    (let [decoded (util/char-string (map util/un-ubyte (cbc-decrypt iv key encoded-user-data)))]
-      (some
-        #(= check-for %)
-        (string/split decoded #";")))))
+  (cookie/make-userdata-checker
+    #(map util/un-ubyte (cbc-decrypt iv key %))
+    check-for))
 
 (defn make-padding-checker [iv key]
   (fn [cipher-text]

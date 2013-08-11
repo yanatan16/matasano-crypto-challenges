@@ -1,7 +1,8 @@
 (ns matasano.attack-aes
   (:use matasano.aes)
 	(:require [matasano.util :as util])
-  (:require [clojure.contrib.math :as math]))
+  (:require [clojure.contrib.math :as math])
+  (:require [matasano.cookie :as cookie]))
 
 (defn count-offset-repeats
   "Count the byte repeats at some offset"

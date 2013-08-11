@@ -68,7 +68,11 @@
   			(byte-array (map byte text))))))
 
 (defn solve-cbc-decrypt
-  [key file & more]
-  (let [text (apply concat (map util/unbase64ify (util/get-lines file)))
-        iv (util/true-byte-string (repeat 16 0))]
-    (util/char-string (cbc-decrypt iv key text))))
+  [key file]
+  (->>
+    file
+    util/get-lines
+    (map util/unbase64ify)
+    (apply concat)
+    (cbc-decrypt (util/true-byte-string (repeat 16 0)) key)
+    util/char-string))

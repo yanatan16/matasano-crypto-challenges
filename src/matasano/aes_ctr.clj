@@ -6,7 +6,8 @@
   (:require [matasano.aes :as aes])
   (:require [matasano.fixedxor :as xor])
   (:require [matasano.rep-xor :as rep-xor])
-  (:require [matasano.stream :as strm]))
+  (:require [matasano.stream :as strm])
+  (:require [matasano.cookie :as cookie]))
 
 (defn make-instance [key nonce]
 	{:key key, :nonce nonce, :count 0})
@@ -42,6 +43,11 @@
 (defn editor [key]
 	#(edit %1 key %2 %3))
 
+(defn make-userdata-encoder [key pre post]
+	(cookie/make-userdata-encoder (partial encrypt key) pre post))
+(defn make-userdata-checker [key check-for]
+	(cookie/make-userdata-checker (partial decrypt key) check-for))
+
 ; -- Hacking --
 
 (defn exploit-edit
@@ -49,9 +55,23 @@
 	[cipher editor]
 	(->
 		cipher
-		(editor 0 (repeat (count cipher) (int \A)))
-		(xor/xor cipher)
-		(xor/xor (repeat (int \A)))))
+		(editor 0 (repeat (count cipher) 0))
+		(xor/xor cipher)))
+
+(defn- find-insertion-point [encoder]
+	(->>
+		[0 1]
+		(map #(count (take-while true? (map = (encoder []) (encoder [%])))))
+		(apply min)))
+
+(defn exploit-userdata [encoder insertion]
+	(let [n (find-insertion-point encoder)]
+		(->
+			insertion
+			count
+			(repeat 0)
+			encoder
+			(xor/xor-mid n insertion))))
 
 ; -- Solvers (problems) --
 
