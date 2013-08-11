@@ -106,3 +106,7 @@
 	(map (partial int-shift-byte x) (range 0 64 8)))
 
 (defn unix [] (quot (System/currentTimeMillis) 1000))
+
+(defn printret
+	([arg] (println arg) arg)
+	([arg & args]	(apply println (cons arg args)) (cons arg args)))

@@ -65,3 +65,13 @@
   (let [pads (map pkcs7-pad possibles)
         lookup (zipmap (map #(list (count %) (last %)) pads) possibles)]
     (lookup (list (count cipher-text) (hack-cbc-find-pad iv pad-check cipher-text)))))
+
+(defn hack-same-key-iv [encryptor decryptor]
+  (->>
+    (repeat 48 0)
+    encryptor
+    (take 16)
+    (#(concat % (repeat 16 0) %))
+    decryptor
+    (#(list (take 16 %) (util/slice 32 16 %)))
+    (apply xor/xor)))
