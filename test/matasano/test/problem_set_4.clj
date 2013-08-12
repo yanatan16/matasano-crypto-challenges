@@ -32,3 +32,9 @@
 			(attack-aes-cbc/hack-same-key-iv
 				(partial aes/cbc-encrypt key key)
 				(partial aes/cbc-decrypt key key))))))
+
+; Problem 28
+; Implement SHA-1 keyed MAC (see matasano.test.sha1)
+
+; Problem 29
+; Break SHA-1 keyed MAC using length extension
