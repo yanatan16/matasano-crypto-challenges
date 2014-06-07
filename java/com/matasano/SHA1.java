@@ -30,6 +30,28 @@ public final class SHA1
                 reset();
         }
 
+        public SHA1(byte[] b, long len) {
+                H0 = getInt(b, 0);
+                H1 = getInt(b, 4);
+                H2 = getInt(b, 8);
+                H3 = getInt(b, 12);
+                H4 = getInt(b, 16);
+
+                currentPos = 0;
+                currentLen = len;
+        }
+
+        public SHA1(byte[] b,  int pos, long len) {
+                H0 = getInt(b, 0);
+                H1 = getInt(b, 4);
+                H2 = getInt(b, 8);
+                H3 = getInt(b, 12);
+                H4 = getInt(b, 16);
+
+                currentPos = pos;
+                currentLen = len;
+        }
+
         public int getDigestLength()
         {
                 return 20;
@@ -188,6 +210,17 @@ public final class SHA1
                 }
         }
 
+        private int intify(byte b) {
+                return b < 0 ? ((int) b) + 256 : (int) b;
+        }
+
+        private int getInt(byte[] b, int pos) {
+                return (intify(b[pos]) << 24) |
+                        (intify(b[pos + 1]) << 16) |
+                        (intify(b[pos + 2]) << 8) |
+                        intify(b[pos + 3]);
+        }
+
         private void putInt(byte[] b, int pos, int val)
         {
                 b[pos] = (byte) (val >> 24);
@@ -197,12 +230,9 @@ public final class SHA1
         }
 
         public byte[] digest() {
-                return digest(0);
-        }
-
-        public byte[] digest(int off) {
                 byte[] b = new byte[getDigestLength()];
-                digest(b, off);
+                digest(b, 0);
+
                 return b;
         }
 
@@ -211,7 +241,30 @@ public final class SHA1
                 digest(out, 0);
         }
 
-        public void digest(byte[] out, int off)
+        public int[] state() {
+                int[] h = new int[7];
+                h[0] = H0;
+                h[1] = H1;
+                h[2] = H2;
+                h[3] = H3;
+                h[4] = H4;
+                h[5] = currentPos;
+                h[6] = (int) currentLen;
+                return h;
+        }
+
+        public void digest(byte[] out, int off) {
+
+                // System.out.printf("digest: %x %x %x %x %x %d/%d\n", H0, H1, H2, H3, H4, currentPos, currentLen);
+
+                putInt(out, off, H0);
+                putInt(out, off + 4, H1);
+                putInt(out, off + 8, H2);
+                putInt(out, off + 12, H3);
+                putInt(out, off + 16, H4);
+        }
+
+        public void complete()
         {
                 /* Pad with a '1' and 7-31 zero bits... */
 
@@ -245,13 +298,9 @@ public final class SHA1
 
                 perform();
 
-                putInt(out, off, H0);
-                putInt(out, off + 4, H1);
-                putInt(out, off + 8, H2);
-                putInt(out, off + 12, H3);
-                putInt(out, off + 16, H4);
 
-                reset();
+                currentPos = 0;
+                currentLen = 0;
         }
 
         private void perform()
